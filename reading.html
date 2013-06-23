@@ -4,65 +4,39 @@
         <title>Inception - Reading</title>
         <meta charset="utf-8">
         <meta name="viewport" content="width=device-width, user-scalable=no, minimum-scale=1.0, maximum-scale=1.0">
-        <!--<link href="bootstrap/bootstrap.css" rel="stylesheet">-->
-        <style>
-            html{background: transparent url(Image/background_1.jpg);color:#000}
-            /*body{margin:0;padding:0;margin-top:20px;text-align:center}*/
-            body{margin:0;padding:0;}
-            /*#loading{font-size:80px;font-weight:bold;font-family:Times}*/
-        </style>
-        <script src="Js/3rdParty/JSARToolKit.js"></script>
-        <script src="Js/3rdParty/(old)three.js"></script>
-        <!--<script src="Js/3rdParty/three.min.js"></script>-->
-        <script src="Js/Inception.js"></script>
-        <script src="Js/Jsar.js"></script>
-        <script src="Js/Models.js"></script>
-        <script src="Js/Webcam.js"></script>
-        <!--<script src="Js/Stats.js"></script>-->
+        <link href="Css/style.css" rel="stylesheet" type="text/css" />
+        <script type="text/javascript" src="Js/3rdParty/jquery-1.7.2.js"></script>
+        <script type="text/javascript" src="Js/UI/dock.js"></script>
+        <script type="text/javascript" src="Js/3rdParty/JSARToolKit.js"></script>
+        <script type="text/javascript" src="Js/3rdParty/(old)Three.js"></script>
+        <script type="text/javascript" src="Js/Inception.js"></script>
+        <script type="text/javascript" src="Js/Jsar.js"></script>
+        <script type="text/javascript" src="Js/Models.js"></script>
+        <script type="text/javascript" src="Js/Webcam.js"></script>
+        <script type="text/javascript" src="Js/Data.js"></script>
         <script>
-            //DEBUG = true;     // global var for JSAR
             var threshold = 90;
-
-            var scaleRate = 1.2;    //显示.放大尺寸比例
-            //var HEIGHT = 320;
-            var HEIGHT = 480;       //webcam尺寸
+            var GLCanvasHeight;
+            var GLCanvasWidth;//长宽
+            //webcam尺寸
+            var HEIGHT = 480;
             var WIDTH = HEIGHT*4/3;
-
-            //
-
-            //var stats;
-            var container;
-            var canvas, camCanvas, videoCanvas;
-            var webcam, video;
-            var camTex, videoTex, imageTex;
-            var model_obj;//=new THREE.Ob.Object3D();
-
-            var ctx;
-            var renderer, projector;
+            var container;            
+            var canvas, ctx;// Jsar canvas
+            var webcam, camCanvas, camTex; // webcam          
+            var renderer, projector = new THREE.Projector();
             var scene, camera;
             var webcamScene, webcamCam;
-
-            var Jsar, Models;
-
-            projector = new THREE.Projector();
-
+            var Jsar, Models, Datas;
             function createElements() {
-                container = document.getElementById('container');
-
-                // create video for AR
-                video = document.createElement('video');
-                video.src = 'textures/sintel.mp4';
-                video.width = 320;
-                video.height = 240;
-                video.loop = true;
-                video.style.display = 'none';
-                video.controls = true;
-
-                // create audio for AR
-                audio = document.createElement('video');
-                //audio.autoplay = true;
-                audio.src = 'Uploads/words.mp3';
-
+                container = document.getElementById('container');                
+                GLCanvasHeight = window.innerHeight;// 设置 glCanvas的尺寸 为 全屏
+                GLCanvasWidth = window.innerWidth;
+                if(GLCanvasWidth/GLCanvasHeight > 4/3) {//设置长宽比例
+                    GLCanvasHeight = GLCanvasWidth*3/4;
+                } else {
+                    GLCanvasWidth = GLCanvasHeight*4/3;
+                }
                 // create webcam
                 webcam = document.createElement('video');
                 webcam.style.display = 'none';
@@ -73,82 +47,37 @@
                 webcam.loop = true;
                 webcam.volume = 0;
                 webcam.autoplay = true;
-                //webcam.controls = true;
                 AR.Webcam(webcam);
-
-                // create video Canvas
-                videoCanvas = document.createElement('canvas');
-                videoCanvas.width = video.width;    //320
-                videoCanvas.height = video.height;   //  240
-                videoTex = new THREE.Texture(videoCanvas);
-
-                //create main canvas
+				
+                //create main canvas （是 Jsar 跟 camCanvas 的 媒介，camCanvas画到canvas上，将像素传给Jsar）
                 canvas = document.createElement('canvas');
                 canvas.width = WIDTH;
                 canvas.height = HEIGHT;
-
+				
                 //create camCanvas
                 camCanvas = document.createElement('canvas');
                 camCanvas.width = webcam.width;
                 camCanvas.height = webcam.height;
                 camTex = new THREE.Texture(camCanvas);
-
-                // canvas ctx
                 ctx = canvas.getContext('2d');
-                ctx.font = "24px URW Gothic L, Arial, Sans-serif";
-
-                // show fps
-//                stats = new Stats();
-//                stats.domElement.style.position = 'absolute';
-//                stats.domElement.style.top = '0px';
-//                container.appendChild( stats.domElement );
             }
-            function loadModels() {
-                Models = new AR.Models(projector, camera);
-                //  load model for each marker
-                Models.addModel(0, new THREE.Mesh(new THREE.PlaneGeometry(120, 120, 0), new THREE.MeshBasicMaterial({
-                    map: videoTex
-                })), AR.Models.ModelType.video, function(e){
-                    if(e.clickCount%2)
-                        video.play();
-                    else
-                        video.pause();
-                });
-                Models.addModel(14, new THREE.Mesh(new THREE.PlaneGeometry(120, 120, 0), new THREE.MeshBasicMaterial({
-                    map: THREE.ImageUtils.loadTexture('textures/bird.jpg')
-                })), AR.Models.ModelType.picture, function(){
-                    window.open('http://www.dahe.cn/xwzx/tp/kj/t20050530_112538.htm')
-                });
-                Models.addModel(21, model_obj, AR.Models.ModelType.obj3d);
-                Models.addModel(91, new THREE.Mesh(new THREE.PlaneGeometry(120, 120, 0), new THREE.MeshBasicMaterial({
-                    map: THREE.ImageUtils.loadTexture('Image/btn_play.png')
-                })), AR.Models.ModelType.button, function(e){
-                    if(e.clickCount%2){
-                        e.model.material.map =  THREE.ImageUtils.loadTexture('Image/btn_stop.png');
-                        audio.play();
-                    }
-                    else{
-                        e.model.material.map =  THREE.ImageUtils.loadTexture('Image/btn_play.png');
-                        audio.pause();
-                    }
-                });
-            }
+			
             // 初始化 3d 跟 AR
             function init() {
                 Jsar = new AR.Jsar(canvas, WIDTH, HEIGHT, threshold, 3);
                 // THREE.JS
                 renderer = new THREE.WebGLRenderer();
-                renderer.setSize(WIDTH*scaleRate, HEIGHT*scaleRate);
+                renderer.setSize(GLCanvasWidth, GLCanvasHeight);//设置全屏
                 var glCanvas = renderer.domElement;
                 container.appendChild(glCanvas);    //  add Renderer-canvas to container
                 scene = new THREE.Scene();
                 var light = new THREE.PointLight(0xffffff);
                 light.position.set(400, 500, 100);
                 scene.add(light);
-                light.position.set( - 400, -500, -100);
+                light.position.set( -400, -500, -100);
                 scene.add(light);
                 //camera = new THREE.Camera();
-                camera = new THREE.PerspectiveCamera( 80, WIDTH / HEIGHT, 10, 10000 );
+                camera = new THREE.PerspectiveCamera( 80, WIDTH / HEIGHT, 1, 10000 );   // 80度
                 scene.add(camera);
                 var ARMat = Jsar.getARMat();
                 camera.projectionMatrix.setFromArray(ARMat);
@@ -164,9 +93,7 @@
             }
             // 动画效果
             function animate() {
-                //requestAnimationFrame( animate );   // 类似 setTimeout(renderLoop, PERIOD); // 实测 fps 太低
                 render();
-                //stats.update(); //显示 fps
             }
             // 渲染
             function render() {
@@ -175,25 +102,24 @@
                 ctx.drawImage(camCanvas, 0, 0, WIDTH, HEIGHT);
                 canvas.changed = true;
                 camTex.needsUpdate = true;
-
-                //  更新视频当前帧到canvas，再更新视频纹理。
-                videoCanvas.getContext('2d').drawImage(video, 0, 0);
-                videoTex.needsUpdate = true;
-
+                // 更新Models
+                Models.update();
                 var markers = Jsar.detect(scene);
-                //  增强虚拟obj
+                // 增强虚拟obj
                 for (var i in markers) {
                     var m = markers[i];
                     if (!m.model) {     //分配 model
                         m.model = new THREE.Object3D();
-                        var cube = Models.getModel(i);
-                        //cube.position.z = 0;
-                        //cube.position.z = -50;
-                        cube.doubleSided = true;
-                        m.model.matrixAutoUpdate = false;
-                        m.model.add(cube);
-                        //var floor = new THREE.Mesh(new THREE.PlaneGeometry(120, 120, 0), new THREE.MeshBasicMaterial({color:0x00}));
-                        //m.model.add(floor);
+                        var cubes = Models.getModel(i);
+                        if(cubes.length == 0) continue;
+                        for(var c in cubes) {
+                            var cube = cubes[c];
+
+                            cube.doubleSided = true;
+                            m.model.matrixAutoUpdate = false;
+
+                            m.model.add(cube);
+                        }
                         scene.add(m.model); //add to scene
                     }
                     var ARMat = new Float32Array(16);
@@ -203,39 +129,60 @@
                 }
                 renderer.autoClear = false;
                 renderer.clear();
-                renderer.render(webcamScene, webcamCam);
+                renderer.render(webcamScene, webcamCam);     // render了两个场景，先 webcam，然后 ar
                 renderer.render(scene, camera);
             }
 
             // onload - 入口点
             window.onload = function() {
-                //var loader = new THREE.BinaryLoader( true );
-                var loader = new THREE.JSONLoader(true);
-                loader.load("models/MGA.js", function ( geometry ) {
-                    geometry.applyMatrix((new THREE.Matrix4).identity().rotateX(-Math.PI/2));
-                    geometry.applyMatrix((new THREE.Matrix4).identity().setScale(8, 8, 8));
-                    geometry.applyMatrix((new THREE.Matrix4).identity().setTranslation(0, 0, -50));
+                createElements();
+                Models = new AR.Models(projector, camera);
+                Datas = new AR.Data(Models);
+                Datas.loadPage1();
+                init();
+                document.addEventListener( 'mousedown', onDocumentMouseDown, false );
+                setInterval(animate, 15);    // 1000/15=67 fps
 
-                    model_obj = new THREE.Mesh(geometry, new THREE.MeshPhongMaterial( { ambient: 0x030303, color: 0x555555, specular: 0x666666, shininess: 10 } ));
-
-                    //  !!Main
-                    createElements();
-                    loadModels();
-                    init();
-                    document.addEventListener( 'mousedown', onDocumentMouseDown, false );
-                    //window.addEventListener( 'resize', onWindowResize, false );
-                    setInterval(animate, 15);    // 1000/15=67 fps
-                });
-            }
+            };
             // events
             function onDocumentMouseDown( event ) {
                 event.preventDefault();
-                //var vector = new THREE.Vector3( ( event.clientX / window.innerWidth ) * 2 - 1, - ( event.clientY / window.innerHeight ) * 2 + 1, 0.5 );
-                var vector = new THREE.Vector3( ( event.clientX / (WIDTH*scaleRate) ) * 2 - 1, - ( event.clientY / (HEIGHT*scaleRate) ) * 2 + 1, 0.5 );
+                var vector = new THREE.Vector3( ( (event.clientX-container.offsetLeft) / (GLCanvasWidth) ) * 2 - 1, 
+				- ( (event.clientY-container.offsetTop) / (GLCanvasHeight) ) * 2 + 1, 0.5 );
                 projector.unprojectVector( vector, camera );    //摄像头标定，分解投影矩阵
                 var ray = new THREE.Ray( camera.position, vector.subSelf( camera.position ).normalize() );
                 var point = Models.intersect(ray);
             }
+			
+			
+			var cutCount=0;
+			function cutCamMethod(){
+				if(cutCount==0){
+					webcam.pause();
+					cutCount=1;
+				}else{
+					webcam.play();
+					cutCount=0;
+				}
+			}
+            // Jq
+
+            $(document).ready(
+                    function()
+                    {
+                        $('#dock').Fisheye(
+                                {
+                                    maxWidth: 50,
+                                    items: 'a',
+                                    itemsText: 'span',
+                                    container: '.dock-container',
+                                    itemWidth: 40,
+                                    proximity: 90,
+                                    halign : 'center'
+                                }
+                        )
+                    }
+            );
         </script>
     </head>
     
@@ -248,25 +195,16 @@
         <div id="loading">
             loading...
         </div>
-        <div id="container">
-
+        <div id="container" >
+            <div class="dock" id="dock">
+                <div class="dock-container">                   
+                    <a class="dock-item" href="#" onClick="Datas.loadPage1()"><img src="Image/imagineCup.jpg" alt="rss" /><span>Page #1</span></a>
+                    <a class="dock-item" href="#" onClick="Datas.loadPage2()"><img src="Image/wow1.jpg" alt="rss" /><span>Page #2</span></a>
+                    <a class="dock-item" href="#" onClick="Datas.loadPage3()"><img src="Image/click.jpg" alt="rss" /><span>Page #3</span></a>                    <a class="dock-item" href="monsterCtr.html"><img src="Image/monster1.jpg" alt="rss" /><span>Page #4</span></a>
+                    <a class="dock-item" href="#" onClick="cutCamMethod()"><img src="Image/cutCam.png" alt="rss" /><span>Clip</span></a>
+                </div>
+            </div>
         </div>
-
-        <!--&lt;!&ndash; Placed at the end of the document so the pages load faster &ndash;&gt;-->
-        <!--<script src="bootstrap/js/jquery.js"></script>-->
-        <!--&lt;!&ndash; bootstrap js plugin &ndash;&gt;-->
-        <!--<script src="bootstrap/js/bootstrap.min.js"></script>-->
-
     </body>
 
 </html>
-
-
-
-            <!--    模态窗口    &lt;!&ndash;Model width="100%" height="400"&ndash;&gt;-->
-            <!--<div id="youku" class="modal hide fade">-->
-                <!--<div class="modal-body">-->
-                    <!--<embed src="http://player.youku.com/player.php/sid/XMzIwMDU5MzQ0/v.swf" allowFullScreen="true" quality="high" width="100%" height="400" align="middle" allowScriptAccess="always" type="application/x-shockwave-flash"></embed>-->
-                <!--</div>-->
-            <!--</div>-->
-            <!--<img src="images/video-thumb.png" width="450" height="272" data-toggle="modal" href="#youku" class="btn btn-primary btn-large" />-->
