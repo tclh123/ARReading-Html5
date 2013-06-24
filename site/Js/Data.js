@@ -149,6 +149,44 @@ AR.Data = function(Models) {
                 }
 
             ]
+        },
+
+        // page
+        {
+            markerId: 2,
+            models: [
+                {           // TODO ， obj3d 类型 的 Model。 待数据化
+                    modelType: AR.Models.ModelType.obj3d,
+
+                    modelMidX: 252,
+                    modelMidY: 331,
+                    markerLeftTopX: 363,
+                    markerLeftTopY: 548,
+                    markerSize: 80,
+
+                    attach: {
+                        loader: new THREE.BinaryLoader(),
+                        url: 'Uploads/3DModel/veyron/VeyronNoUv_bin.js',
+                        material: new THREE.MeshFaceMaterial([
+                            AR.Data.mlib[ "Black rough" ],		// tires + inside
+                            AR.Data.mlib[ "Pure chrome" ],		// wheels + extras chrome
+                            AR.Data.mlib[ "Orange metal" ], 			// back / top / front torso
+                            AR.Data.mlib[ "Dark glass" ],		// glass
+                            AR.Data.mlib[ "Pure chrome" ],		// sides torso
+                            AR.Data.mlib[ "Pure chrome" ],		// engine
+                            AR.Data.mlib[ "Red glass 50" ],		// backlights
+                            AR.Data.mlib[ "Orange glass 50" ]	// backsignals
+                        ]),
+                        scale: 2,
+                        rotation: [0, Math.PI/2, 0],
+                        callback: function(model) {    // TODO: 这个callback，应该放在处理数据的地方
+                            model.obj.position.x = -240;
+                            model.obj.position.y = 356+100;
+                            Models.addModel(2, model);
+                        }
+                    }
+                }
+            ]
         }
 
     ];
@@ -191,16 +229,21 @@ AR.Data = function(Models) {
                 for(var i in page.models) {
                     var modelData = page.models[i];
 
-                    var model = Models.createModel(modelData.modelType, modelData.modelWidth, modelData.modelHeight, modelData.attach);
+                    if(modelData.modelType == AR.Models.ModelType.obj3d) {  //   模型要用callback
+                        var model3d = Models.createModel(modelData.modelType, 0, 0, modelData.attach);
 
-                    var scale = MARKER_SIZE/modelData.markerSize;
-                    var offsetX = ((modelData.markerLeftTopX+modelData.markerSize/2)-(modelData.modelLeftTopX+modelData.modelWidth/2))*scale;
-                    var offsetY = ((modelData.markerLeftTopY+modelData.markerSize/2)-(modelData.modelLeftTopY+modelData.modelHeight/2))*scale;
+                    } else {
+                        var model = Models.createModel(modelData.modelType, modelData.modelWidth, modelData.modelHeight, modelData.attach);
 
-                    model.obj.position.x = -offsetX;
-                    model.obj.position.y = offsetY;
+                        var scale = MARKER_SIZE/modelData.markerSize;
+                        var offsetX = ((modelData.markerLeftTopX+modelData.markerSize/2)-(modelData.modelLeftTopX+modelData.modelWidth/2))*scale;
+                        var offsetY = ((modelData.markerLeftTopY+modelData.markerSize/2)-(modelData.modelLeftTopY+modelData.modelHeight/2))*scale;
 
-                    Models.addModel(page.markerId, model, modelData.clickEventCallback);
+                        model.obj.position.x = -offsetX;
+                        model.obj.position.y = offsetY;
+
+                        Models.addModel(page.markerId, model, modelData.clickEventCallback);
+                    }
                 }
             }
         } else {
@@ -211,88 +254,88 @@ AR.Data = function(Models) {
     //////////////////////////////////////////////////////
 
 
-    // imagine cup 视频
-    this.loadPage1 = function() {
-        Models.clearModels();
-
-        // 根据 markerId 获取 page，加载 models
-        var page = this.getPage(0);
-        if(page && page.models) {
-            for(var i in page.models) {
-                var modelData = page.models[i];
-
-                var model = Models.createModel(modelData.modelType, modelData.modelWidth, modelData.modelHeight, modelData.attach);
-
-                var scale = MARKER_SIZE/modelData.markerSize;
-                var offsetX = ((modelData.markerLeftTopX+modelData.markerSize/2)-(modelData.modelLeftTopX+modelData.modelWidth/2))*scale;
-                var offsetY = ((modelData.markerLeftTopY+modelData.markerSize/2)-(modelData.modelLeftTopY+modelData.modelHeight/2))*scale;
-
-                model.obj.position.x = -offsetX;
-                model.obj.position.y = offsetY;
-
-                Models.addModel(page.markerId, model, modelData.clickEventCallback);
-            }
-        }
-    };
-
-    // Car Models
-    this.loadPage2 = function() {
-        Models.clearModels();
-
-        // TODO
-        // 模型要用callback，暂时特殊处理...
-        // 并根据模型选择Loader...
-
-        // obj3d
-        var model3d = Models.createModel(AR.Models.ModelType.obj3d, 0, 0, {
-            loader: new THREE.BinaryLoader(),
-            url:'Uploads/3DModel/veyron/VeyronNoUv_bin.js',
-            material: new THREE.MeshFaceMaterial([
-                AR.Data.mlib[ "Black rough" ],		// tires + inside
-                AR.Data.mlib[ "Pure chrome" ],		// wheels + extras chrome
-                AR.Data.mlib[ "Orange metal" ], 			// back / top / front torso
-                AR.Data.mlib[ "Dark glass" ],		// glass
-                AR.Data.mlib[ "Pure chrome" ],		// sides torso
-                AR.Data.mlib[ "Pure chrome" ],		// engine
-                AR.Data.mlib[ "Red glass 50" ],		// backlights
-                AR.Data.mlib[ "Orange glass 50" ]	// backsignals
-            ]),
-            scale: 2,
-            rotation: [0, Math.PI/2, 0],
-            callback: function(model) {
+//    // imagine cup 视频
+//    this.loadPage1 = function() {
+//        Models.clearModels();
+//
+//        // 根据 markerId 获取 page，加载 models
+//        var page = this.getPage(0);
+//        if(page && page.models) {
+//            for(var i in page.models) {
+//                var modelData = page.models[i];
+//
+//                var model = Models.createModel(modelData.modelType, modelData.modelWidth, modelData.modelHeight, modelData.attach);
+//
+//                var scale = MARKER_SIZE/modelData.markerSize;
+//                var offsetX = ((modelData.markerLeftTopX+modelData.markerSize/2)-(modelData.modelLeftTopX+modelData.modelWidth/2))*scale;
+//                var offsetY = ((modelData.markerLeftTopY+modelData.markerSize/2)-(modelData.modelLeftTopY+modelData.modelHeight/2))*scale;
+//
+//                model.obj.position.x = -offsetX;
+//                model.obj.position.y = offsetY;
+//
+//                Models.addModel(page.markerId, model, modelData.clickEventCallback);
+//            }
+//        }
+//    };
+//
+//    // Car Models
+//    this.loadPage2 = function() {
+//        Models.clearModels();
+//
+//        // TODO
+//        // 模型要用callback，暂时特殊处理...
+//        // 并根据模型选择Loader...
+//
+//        // obj3d
+//        var model3d = Models.createModel(AR.Models.ModelType.obj3d, 0, 0, {
+//            loader: new THREE.BinaryLoader(),
+//            url:'Uploads/3DModel/veyron/VeyronNoUv_bin.js',
+//            material: new THREE.MeshFaceMaterial([
+//                AR.Data.mlib[ "Black rough" ],		// tires + inside
+//                AR.Data.mlib[ "Pure chrome" ],		// wheels + extras chrome
+//                AR.Data.mlib[ "Orange metal" ], 			// back / top / front torso
+//                AR.Data.mlib[ "Dark glass" ],		// glass
+//                AR.Data.mlib[ "Pure chrome" ],		// sides torso
+//                AR.Data.mlib[ "Pure chrome" ],		// engine
+//                AR.Data.mlib[ "Red glass 50" ],		// backlights
+//                AR.Data.mlib[ "Orange glass 50" ]	// backsignals
+//            ]),
+//            scale: 2,
+//            rotation: [0, Math.PI/2, 0],
+//            callback: function(model) {
+////                model.obj.position.x = -240;
+////                model.obj.position.y = 296;
 //                model.obj.position.x = -240;
-//                model.obj.position.y = 296;
-                model.obj.position.x = -240;
-                model.obj.position.y = 356+100;
-                Models.addModel(2, model);
-            }
-        });
-
-    };
-
-    // 点读机
-    this.loadPage3 = function() {
-        Models.clearModels();
-
-        // 根据 markerId 获取 page，加载 models
-        var page = this.getPage(1);
-        if(page && page.models) {
-            for(var i in page.models) {
-                var modelData = page.models[i];
-
-                var model = Models.createModel(modelData.modelType, modelData.modelWidth, modelData.modelHeight, modelData.attach);
-
-                var scale = MARKER_SIZE/modelData.markerSize;
-                var offsetX = ((modelData.markerLeftTopX+modelData.markerSize/2)-(modelData.modelLeftTopX+modelData.modelWidth/2))*scale;
-                var offsetY = ((modelData.markerLeftTopY+modelData.markerSize/2)-(modelData.modelLeftTopY+modelData.modelHeight/2))*scale;
-
-                model.obj.position.x = -offsetX;
-                model.obj.position.y = offsetY;
-
-                Models.addModel(page.markerId, model, modelData.clickEventCallback);
-            }
-        }
-    };
+//                model.obj.position.y = 356+100;
+//                Models.addModel(2, model);
+//            }
+//        });
+//
+//    };
+//
+//    // 点读机
+//    this.loadPage3 = function() {
+//        Models.clearModels();
+//
+//        // 根据 markerId 获取 page，加载 models
+//        var page = this.getPage(1);
+//        if(page && page.models) {
+//            for(var i in page.models) {
+//                var modelData = page.models[i];
+//
+//                var model = Models.createModel(modelData.modelType, modelData.modelWidth, modelData.modelHeight, modelData.attach);
+//
+//                var scale = MARKER_SIZE/modelData.markerSize;
+//                var offsetX = ((modelData.markerLeftTopX+modelData.markerSize/2)-(modelData.modelLeftTopX+modelData.modelWidth/2))*scale;
+//                var offsetY = ((modelData.markerLeftTopY+modelData.markerSize/2)-(modelData.modelLeftTopY+modelData.modelHeight/2))*scale;
+//
+//                model.obj.position.x = -offsetX;
+//                model.obj.position.y = offsetY;
+//
+//                Models.addModel(page.markerId, model, modelData.clickEventCallback);
+//            }
+//        }
+//    };
 
 };
 
