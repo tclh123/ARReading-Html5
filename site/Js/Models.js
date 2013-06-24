@@ -48,6 +48,15 @@ AR.Models = function(projector, camera){
 
         if(modelType == AR.Models.ModelType.video) {
             var video = document.createElement('video');
+
+            video.addEventListener("loadstart", function() {
+                $('#loadinggif').show();
+            }, false);
+            video.addEventListener("canplay", function() {
+                $('#loadinggif').hide();
+            }, false);
+
+
             video.src = attach.src;
             video.width = attach.width || 320;
             video.height = attach.height || 240;
@@ -66,33 +75,49 @@ AR.Models = function(projector, camera){
             model['texture'] = videoTex;
             model['obj'] = new THREE.Mesh(new THREE.PlaneGeometry(width, height), new THREE.MeshBasicMaterial({
                 map: videoTex,
-                overdraw: true,             // overdraw
+//                overdraw: true,             // overdraw
                 side: THREE.DoubleSide
             }));
         } else if(modelType == AR.Models.ModelType.audio) {
+
+            // 放到前面，避免被阻塞?？
+            model['obj'] = new THREE.Mesh(new THREE.PlaneGeometry(width, height), new THREE.MeshBasicMaterial({
+                map: THREE.ImageUtils.loadTexture(attach.imageTexSrc),
+//                overdraw: true,             // overdraw
+                transparent: true,
+                side: THREE.DoubleSide
+            }));
+
             var audio = document.createElement('audio');
+
+            audio.addEventListener("loadstart", function() {
+                $('#loadinggif').show();
+            }, false);
+            audio.addEventListener("canplay", function() {
+                $('#loadinggif').hide();
+            }, false);
+
             audio.autoplay = attach.isAutoplay || false;
             audio.src = attach.src;
 
             model['domElement'] = audio;
-            model['obj'] = new THREE.Mesh(new THREE.PlaneGeometry(width, height), new THREE.MeshBasicMaterial({
-                map: THREE.ImageUtils.loadTexture(attach.imageTexSrc),
-                overdraw: true,             // overdraw
-                transparent: true,
-                side: THREE.DoubleSide
-            }));
+
         } else if(modelType == AR.Models.ModelType.picture) {
             model['obj'] = new THREE.Mesh(new THREE.PlaneGeometry(width, height), new THREE.MeshBasicMaterial({
                 map: THREE.ImageUtils.loadTexture(attach.imageTexSrc),
-                overdraw: true,             // overdraw
+//                overdraw: true,             // overdraw
                 transparent: true,
                 side: THREE.DoubleSide
             }));
 
         } else if(modelType == AR.Models.ModelType.obj3d) {
             var loader = attach.loader;
+
+            $('#loadinggif').show();
             loader.load( attach.url,
                 function( e ) {
+                    $('#loadinggif').hide();
+
                     var obj;
                     if(e instanceof THREE.Geometry) {
                         // material

@@ -29,6 +29,7 @@ AR.Data = function(Models) {
                     markerSize: 120,    // 在硬质媒体上，印有marker的大小
                     attach: {
                         src: 'Uploads/Movie/ImagineCup.mp4',
+//                        src: 'https://github.com/tclh123/ARReading-Html5/blob/master/site/Uploads/Movie/ImagineCup.mp4?raw=true',
                         width: 672,
                         height: 378,
                         isLoop: true
