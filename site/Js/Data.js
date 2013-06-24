@@ -208,6 +208,9 @@ AR.Data = function(Models) {
         }
     };
 
+    //////////////////////////////////////////////////////
+
+
     // imagine cup 视频
     this.loadPage1 = function() {
         Models.clearModels();
@@ -261,7 +264,7 @@ AR.Data = function(Models) {
 //                model.obj.position.y = 296;
                 model.obj.position.x = -240;
                 model.obj.position.y = 356+100;
-                Models.addModel(0, model);
+                Models.addModel(2, model);
             }
         });
 
