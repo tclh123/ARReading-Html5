@@ -8,35 +8,57 @@
         <script type="text/javascript" src="Js/3rdParty/jquery-1.7.2.js"></script>
         <script type="text/javascript" src="Js/UI/dock.js"></script>
         <script type="text/javascript" src="Js/3rdParty/JSARToolKit.js"></script>
+        <!--<script src="Js/3rdParty/three.js"></script>  // 用这个的话，intersect 有问题，貌似是bug！！-->
         <script type="text/javascript" src="Js/3rdParty/(old)Three.js"></script>
         <script type="text/javascript" src="Js/Inception.js"></script>
         <script type="text/javascript" src="Js/Jsar.js"></script>
         <script type="text/javascript" src="Js/Models.js"></script>
         <script type="text/javascript" src="Js/Webcam.js"></script>
         <script type="text/javascript" src="Js/Data.js"></script>
+        <!--<script src="Js/Stats.js"></script>-->
         <script>
+            //DEBUG = true;     // global var for JSAR
             var threshold = 90;
+
+//            var scaleRate = 1.2;    //显示.放大尺寸比例
+
             var GLCanvasHeight;
-            var GLCanvasWidth;//长宽
+            var GLCanvasWidth;
+
             //webcam尺寸
             var HEIGHT = 480;
             var WIDTH = HEIGHT*4/3;
-            var container;            
-            var canvas, ctx;// Jsar canvas
-            var webcam, camCanvas, camTex; // webcam          
+
+            //
+
+            var container;
+
+            // Jsar canvas
+            var canvas, ctx;
+
+            // webcam
+            var webcam, camCanvas, camTex;
+
+            // gl
             var renderer, projector = new THREE.Projector();
             var scene, camera;
             var webcamScene, webcamCam;
+
+            // global objects
             var Jsar, Models, Datas;
+
             function createElements() {
-                container = document.getElementById('container');                
-                GLCanvasHeight = window.innerHeight;// 设置 glCanvas的尺寸 为 全屏
+                container = document.getElementById('container');
+
+                // 设置 glCanvas的尺寸 为 全屏
+                GLCanvasHeight = window.innerHeight;
                 GLCanvasWidth = window.innerWidth;
-                if(GLCanvasWidth/GLCanvasHeight > 4/3) {//设置长宽比例
+                if(GLCanvasWidth/GLCanvasHeight > 4/3) {
                     GLCanvasHeight = GLCanvasWidth*3/4;
                 } else {
                     GLCanvasWidth = GLCanvasHeight*4/3;
                 }
+
                 // create webcam
                 webcam = document.createElement('video');
                 webcam.style.display = 'none';
@@ -48,26 +70,79 @@
                 webcam.volume = 0;
                 webcam.autoplay = true;
                 AR.Webcam(webcam);
-				
+
                 //create main canvas （是 Jsar 跟 camCanvas 的 媒介，camCanvas画到canvas上，将像素传给Jsar）
                 canvas = document.createElement('canvas');
                 canvas.width = WIDTH;
                 canvas.height = HEIGHT;
-				
+
                 //create camCanvas
                 camCanvas = document.createElement('canvas');
                 camCanvas.width = webcam.width;
                 camCanvas.height = webcam.height;
                 camTex = new THREE.Texture(camCanvas);
+
+                // canvas ctx
                 ctx = canvas.getContext('2d');
             }
-			
+//            function loadModels() {
+//                Models = new AR.Models(projector, camera);
+//
+//                // movie
+//                var movieModel = Models.createModel(AR.Models.ModelType.video, 120, 120, {
+//                    src: 'textures/sintel.mp4',
+//                    width: 320,
+//                    height: 240,
+//                    isLoop: true
+//                });
+//                Models.addModel(0, movieModel, function(e){
+//                    if(e.clickCount%2)
+//                        e.domElement.play();
+//                    else
+//                        e.domElement.pause();
+//                });
+//
+//                // audio
+//                var audioButtonModel = Models.createModel(AR.Models.ModelType.audio, 120, 120, {
+//                    src: 'Uploads/words.mp3',
+//                    isAutoplay: false,
+//                    imageTexSrc: 'Image/btn_play.png'
+//                });
+//                Models.addModel(91, audioButtonModel, function(e){
+//                    if(e.clickCount%2){
+//                        e.obj.material.map =  THREE.ImageUtils.loadTexture('Image/btn_stop.png');
+//                        e.domElement.play();
+//                    }
+//                    else{
+//                        e.obj.material.map =  THREE.ImageUtils.loadTexture('Image/btn_play.png');
+//                        e.domElement.pause();
+//                    }
+//                });
+//            }
+//            function loadModels2() {
+//                Models.clearModels();
+//
+//                // pics
+//                var pictureModel = Models.createModel(AR.Models.ModelType.picture, 120, 120, {
+//                    imageTexSrc: 'textures/bird.jpg'
+//                });
+//                Models.addModel(14, pictureModel, function(){
+//                    window.open('http://www.dahe.cn/xwzx/tp/kj/t20050530_112538.htm')
+//                });
+//            }
+
+
+
             // 初始化 3d 跟 AR
             function init() {
                 Jsar = new AR.Jsar(canvas, WIDTH, HEIGHT, threshold, 3);
                 // THREE.JS
                 renderer = new THREE.WebGLRenderer();
-                renderer.setSize(GLCanvasWidth, GLCanvasHeight);//设置全屏
+//                renderer = new THREE.CanvasRenderer();
+//                renderer.setSize(WIDTH*scaleRate, HEIGHT*scaleRate);
+                renderer.setSize(GLCanvasWidth, GLCanvasHeight);
+
+
                 var glCanvas = renderer.domElement;
                 container.appendChild(glCanvas);    //  add Renderer-canvas to container
                 scene = new THREE.Scene();
@@ -77,7 +152,8 @@
                 light.position.set( -400, -500, -100);
                 scene.add(light);
                 //camera = new THREE.Camera();
-                camera = new THREE.PerspectiveCamera( 80, WIDTH / HEIGHT, 1, 10000 );   // 80度
+                camera = new THREE.PerspectiveCamera(80, WIDTH / HEIGHT, 1, 10000 );   // 80度
+
                 scene.add(camera);
                 var ARMat = Jsar.getARMat();
                 camera.projectionMatrix.setFromArray(ARMat);
@@ -90,6 +166,36 @@
                 webcamScene = new THREE.Scene();
                 webcamScene.add(plane);
                 webcamScene.add(webcamCam);
+
+
+                /////////////////////////
+//                Jsar = new AR.Jsar(canvas, WIDTH, HEIGHT, threshold, 3);
+//                // THREE.JS
+//                renderer = new THREE.CanvasRenderer();
+//                renderer.setSize(WIDTH * scaleRate, HEIGHT * scaleRate);
+//                var glCanvas = renderer.domElement;
+//                container.appendChild(glCanvas);    //  add Renderer-canvas to container
+//
+//                scene = new THREE.Scene();
+//                var light = new THREE.PointLight(0xffffff);
+//                light.position.set(400, 500, 100);
+//                scene.add(light);
+//                light.position.set(-400, -500, -100);
+//                scene.add(light);
+//                //camera = new THREE.Camera();
+//                camera = new THREE.PerspectiveCamera(80, WIDTH / HEIGHT, 10, 10000);
+//                scene.add(camera);
+//                var ARMat = Jsar.getARMat();
+//                camera.projectionMatrix.setFromArray(ARMat);
+//                var plane = new THREE.Mesh(new THREE.PlaneGeometry(2, 2, 0), new THREE.MeshBasicMaterial({
+//                    map: camTex
+//                }));
+//                plane.material.depthTest = false;
+//                plane.material.depthWrite = false;
+//                webcamCam = new THREE.Camera();
+//                webcamScene = new THREE.Scene();
+//                webcamScene.add(plane);
+//                webcamScene.add(webcamCam);
             }
             // 动画效果
             function animate() {
@@ -102,8 +208,10 @@
                 ctx.drawImage(camCanvas, 0, 0, WIDTH, HEIGHT);
                 canvas.changed = true;
                 camTex.needsUpdate = true;
+
                 // 更新Models
                 Models.update();
+
                 var markers = Jsar.detect(scene);
                 // 增强虚拟obj
                 for (var i in markers) {
@@ -112,6 +220,7 @@
                         m.model = new THREE.Object3D();
                         var cubes = Models.getModel(i);
                         if(cubes.length == 0) continue;
+
                         for(var c in cubes) {
                             var cube = cubes[c];
 
@@ -120,12 +229,18 @@
 
                             m.model.add(cube);
                         }
+
+                        //var floor = new THREE.Mesh(new THREE.PlaneGeometry(120, 120, 0), new THREE.MeshBasicMaterial({color:0x00}));
+                        //m.model.add(floor);
                         scene.add(m.model); //add to scene
                     }
                     var ARMat = new Float32Array(16);
                     Jsar.copyMatrix(m.transform, ARMat);   // ARmat -> GLmat
                     m.model.matrix.setFromArray(ARMat);
                     m.model.matrixWorldNeedsUpdate = true;
+
+//                    m.model.translateX(240);
+//                    m.model.translateY(296);
                 }
                 renderer.autoClear = false;
                 renderer.clear();
@@ -135,20 +250,26 @@
 
             // onload - 入口点
             window.onload = function() {
+
+                //  !!Main
                 createElements();
+//                loadModels();
                 Models = new AR.Models(projector, camera);
                 Datas = new AR.Data(Models);
                 Datas.loadPage1();
+
                 init();
                 document.addEventListener( 'mousedown', onDocumentMouseDown, false );
+                //window.addEventListener( 'resize', onWindowResize, false );
                 setInterval(animate, 15);    // 1000/15=67 fps
 
             };
             // events
             function onDocumentMouseDown( event ) {
                 event.preventDefault();
-                var vector = new THREE.Vector3( ( (event.clientX-container.offsetLeft) / (GLCanvasWidth) ) * 2 - 1, 
-				- ( (event.clientY-container.offsetTop) / (GLCanvasHeight) ) * 2 + 1, 0.5 );
+                //var vector = new THREE.Vector3( ( event.clientX / window.innerWidth ) * 2 - 1, - ( event.clientY / window.innerHeight ) * 2 + 1, 0.5 );
+//                var vector = new THREE.Vector3( ( (event.clientX-container.offsetLeft) / (WIDTH*scaleRate) ) * 2 - 1, - ( (event.clientY-container.offsetTop) / (HEIGHT*scaleRate) ) * 2 + 1, 0.5 );
+                var vector = new THREE.Vector3( ( (event.clientX-container.offsetLeft) / (GLCanvasWidth) ) * 2 - 1, - ( (event.clientY-container.offsetTop) / (GLCanvasHeight) ) * 2 + 1, 0.5 );
                 projector.unprojectVector( vector, camera );    //摄像头标定，分解投影矩阵
                 var ray = new THREE.Ray( camera.position, vector.subSelf( camera.position ).normalize() );
                 var point = Models.intersect(ray);
@@ -159,12 +280,19 @@
 			function cutCamMethod(){
 				if(cutCount==0){
 					webcam.pause();
+//					var img=document.getElementById("cutCam");
+//                    img.title="cutCam";
+//                    img.src="textures//continue.png";
 					cutCount=1;
 				}else{
 					webcam.play();
+//					var img=document.getElementById("cutCam");
+//                    img.title="continue";
+//                    img.src="textures//cutCam.png";
 					cutCount=0;
 				}
 			}
+
             // Jq
 
             $(document).ready(
@@ -197,10 +325,26 @@
         </div>
         <div id="container" >
             <div class="dock" id="dock">
-                <div class="dock-container">                   
-                    <a class="dock-item" href="#" onClick="Datas.loadPage1()"><img src="Image/imagineCup.jpg" alt="rss" /><span>Page #1</span></a>
-                    <a class="dock-item" href="#" onClick="Datas.loadPage2()"><img src="Image/wow1.jpg" alt="rss" /><span>Page #2</span></a>
-                    <a class="dock-item" href="#" onClick="Datas.loadPage3()"><img src="Image/click.jpg" alt="rss" /><span>Page #3</span></a>                    <a class="dock-item" href="monsterCtr.html"><img src="Image/monster1.jpg" alt="rss" /><span>Page #4</span></a>
+                <div class="dock-container">
+
+                    <!--http://localhost/ARReading-IC/Web%E7%89%88/newReading.html-->
+
+                    <a class="dock-item" href="monsterCtr.html"><img src="images/home.png" alt="home" /><span>Home</span></a>
+                    <a class="dock-item" href="#"><img src="images/email.png" alt="contact" /><span>Contact</span></a>
+                    <a class="dock-item" href="#"><img src="images/portfolio.png" alt="portfolio" /><span>Portfolio</span></a>
+                    <a class="dock-item" href="#"><img src="images/music.png" alt="music" /><span>Music</span></a>
+                    <a class="dock-item" href="#"><img src="images/video.png" alt="video" /><span>Video</span></a>
+                    <a class="dock-item" href="#"><img src="images/history.png" alt="history" /><span>History</span></a>
+                    <a class="dock-item" href="#"><img src="images/calendar.png" alt="calendar" /><span>Calendar</span></a>
+
+
+                    <a class="dock-item" href="Web%E7%89%88/newReading.html"><img src="images/rss.png" alt="rss" /><span>RSS</span></a>
+
+                    <a class="dock-item" href="#" onClick="Datas.loadPage1()"><img src="Image/book_1.jpg" alt="rss" /><span>Page #1</span></a>
+                    <a class="dock-item" href="#" onClick="Datas.loadPage2()"><img src="Image/book_2.jpg" alt="rss" /><span>Page #2</span></a>
+                    <a class="dock-item" href="#" onClick="Datas.loadPage3()"><img src="Image/book_3.jpg" alt="rss" /><span>Page #2</span></a>
+                    <!--<a class="dock-item" href="#" onClick="Datas.loadPage3()"><img src="Image/book_1.jpg" alt="rss" /><span>Page #3</span></a>-->
+
                     <a class="dock-item" href="#" onClick="cutCamMethod()"><img src="Image/cutCam.png" alt="rss" /><span>Clip</span></a>
                 </div>
             </div>

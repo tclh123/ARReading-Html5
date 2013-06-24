@@ -64,8 +64,10 @@ AR.Models = function(projector, camera){
             model['domElement'] = video;
             model['canvas'] = videoCanvas;
             model['texture'] = videoTex;
-            model['obj'] = new THREE.Mesh(new THREE.PlaneGeometry(width, height, 0), new THREE.MeshBasicMaterial({
-                map: videoTex
+            model['obj'] = new THREE.Mesh(new THREE.PlaneGeometry(width, height), new THREE.MeshBasicMaterial({
+                map: videoTex,
+                overdraw: true,             // overdraw
+                side: THREE.DoubleSide
             }));
         } else if(modelType == AR.Models.ModelType.audio) {
             var audio = document.createElement('audio');
@@ -73,24 +75,60 @@ AR.Models = function(projector, camera){
             audio.src = attach.src;
 
             model['domElement'] = audio;
-            model['obj'] = new THREE.Mesh(new THREE.PlaneGeometry(width, height, 0), new THREE.MeshBasicMaterial({
-                map: THREE.ImageUtils.loadTexture(attach.imageTexSrc)
+            model['obj'] = new THREE.Mesh(new THREE.PlaneGeometry(width, height), new THREE.MeshBasicMaterial({
+                map: THREE.ImageUtils.loadTexture(attach.imageTexSrc),
+                overdraw: true,             // overdraw
+                transparent: true,
+                side: THREE.DoubleSide
             }));
         } else if(modelType == AR.Models.ModelType.picture) {
-            model['obj'] = new THREE.Mesh(new THREE.PlaneGeometry(width, height, 0), new THREE.MeshBasicMaterial({
-                map: THREE.ImageUtils.loadTexture(attach.imageTexSrc)
+            model['obj'] = new THREE.Mesh(new THREE.PlaneGeometry(width, height), new THREE.MeshBasicMaterial({
+                map: THREE.ImageUtils.loadTexture(attach.imageTexSrc),
+                overdraw: true,             // overdraw
+                transparent: true,
+                side: THREE.DoubleSide
             }));
+        } else if(modelType == AR.Models.ModelType.obj3d) {
+            var loader = attach.loader;
+            loader.load( attach.url,
+                function( e ) {
+                    var obj;
+                    if(e instanceof THREE.Geometry) {
+                        // material
+                        obj = new THREE.Mesh(e, attach.material ); //Material
+                    } else if(e instanceof THREE.Object3D) {
+                        obj = e;
+                        // texture
+                        // need to deal with Object3D.children(mesh).material.map <- texture
+                    }
+
+                    if(attach.rotation) {
+                        obj.rotation.x = attach.rotation[ 0 ];
+                        obj.rotation.y = attach.rotation[ 1 ];
+                        obj.rotation.z = attach.rotation[ 2 ];
+                    }
+                    if(attach.scale) {
+                        obj.scale.x = obj.scale.y = obj.scale.z = attach.scale;
+                    }
+
+                    model['obj'] = obj;
+
+                    attach.callback(model);
+                }
+            );
         }
 
         return model;
     };
 
     //加Model
-    this.addModel = function(idMarker, model, onclick){
+    this.addModel = function(idMarker, model, onclick, onhover, nohover){
 
         model['idMarker'] = idMarker;
 
         model['onclick'] = onclick || function(){};
+        model['onhover'] = onhover || function(){};
+        model['nohover'] = nohover || function(){};
         model['clickCount'] = 0;
 
         this._models.push(model);
@@ -115,17 +153,17 @@ AR.Models = function(projector, camera){
         if ( intersects.length > 0 ) {
             //for ( var i = 0, l = this._objects.length; i < l; i ++ ) {
             for(var i in this._objects){
-                //console.log('searching');
                 if(intersects[ 0 ].object == this._objects[i]){
-                    //console.log('yes='+i);
                     var id = i;
                     break;
                 }
             }
-            this._models[id].clickCount++;
-            this._models[id].onclick(this._models[id]);
-            return intersects[ 0 ].point;
+//            this._models[id].clickCount++;
+//            this._models[id].onclick(this._models[id]);
+//            return intersects[ 0 ].point;
+            return id;
         }
+        return -1;
     }
 };
 

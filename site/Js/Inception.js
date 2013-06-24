@@ -6,3 +6,5 @@
  * Copyright (C)2012 Inception Team
  */
 var AR = AR || { REVISION: '1.0' };
+
+AR.isIE = false;

@@ -14,8 +14,9 @@ AR.Webcam = function(webcam){
             return navigator.webkitGetUserMedia(t, onsuccess, onerror);
         } else if (navigator.mozGetUserMedia) {
             return navigator.mozGetUserMedia(t, onsuccess, onerror);
-        } else if (navigator.msGetUserMedia) {
-            return navigator.msGetUserMedia(t, onsuccess, onerror);
+        }
+        else if (navigator.msGetUserMedia) {
+            return navigator.msGetUserMedia({ "video": true, "audio": false }, onsuccess, onerror);
         } else {
             onerror(new Error("No getUserMedia implementation found."));
         }

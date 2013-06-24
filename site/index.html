@@ -1,26 +1,337 @@
-<!DOCTYPE HTML>
-<html lang="en">
-    <head>
-        <script type="text/javascript" src="bootstrap/bootstrap.js"></script>
-        <script type="text/javascript" src="bootstrap/jquery-1.7.2.js"></script>
-        <link rel="stylesheet" href="bootstrap/bootstrap.css">
-        <script type="text/javascript">
-		
-        </script>
-    </head>
-    <body>
-        <div id="myProfile" class="span5 well pricehover" style="width: 1200px; height: 630px; background: transparent url(Image/background.png);">
-            <h1 style="font-size: 40px; color: #ffffff; margin-left: 15px;">AR Reading</h1>
-            <ul class="nav nav-pills" style="margin-top: 70px; margin-left: 20px;">
-                <div>
-                    <img width="120" height="120" style="margin-top: 5px;" src="Image/book_1.jpg"/>
-                </div>
-				<div>
-					<button id="btn_Read" class="btn-primary" style="margin-top: 10px;" width="120" height="65" onClick="window.location='reading.html';">
-						Reading
-					</button>
-				</div>
-            </ul>
+<!DOCTYPE html>
+<html>
+<head>
+    <title>Inception - ARReading</title>
+    <meta charset="utf-8">
+    <meta name="viewport" content="width=device-width, user-scalable=no, minimum-scale=1.0, maximum-scale=1.0">
+
+    <link href="Css/style.css" rel="stylesheet" type="text/css" />
+
+    <!--IE 9-10 msGetUserMedia-->
+    <link href="Js/MsPrototype/jquery-ui.css" rel="stylesheet" type="text/css" />
+    <script language="javascript" type="text/javascript" src="Js/MsPrototype/jquery.min.js"></script>
+    <script language="javascript" type="text/javascript" src="Js/MsPrototype/jquery-ui.min.js"></script>
+    <script language="javascript" type="text/javascript" src="Js/MsPrototype/Common.js"></script>
+    <script language="javascript" type="text/javascript" src="Js/MsPrototype/InitActiveXObjects.js"></script>
+    <script language="javascript" type="text/javascript" src="Js/MsPrototype/MsGetUserMedia.js"></script>
+
+    <!--3rdParty-->
+    <script type="text/javascript" src="Js/3rdParty/threejs/build/three.js"></script>
+    <script type="text/javascript" src="Js/3rdParty/threejs/loaders/OBJLoader.js"></script>
+    <script type="text/javascript" src="Js/3rdParty/threejs/loaders/BinaryLoader.js"></script>
+    <script type="text/javascript" src="Js/3rdParty/JSARToolKit.js"></script>
+
+    <!--Inception-->
+    <script type="text/javascript" src="Js/Inception.js"></script>
+    <script type="text/javascript" src="Js/Webcam.js"></script>
+
+    <script type="text/javascript" src="Js/Jsar.js"></script>
+    <script type="text/javascript" src="Js/Models.js"></script>
+    <script type="text/javascript" src="Js/Data.js"></script>
+
+    <!--others-->
+    <script type="text/javascript" src="Js/Tools/Detector.js"></script>
+    <script type="text/javascript" src="Js/UI/dock.js"></script>
+
+    <script>
+        //DEBUG = true;     // global var for JSAR
+        var threshold = 90;
+
+        var GLCanvasHeight;
+        var GLCanvasWidth;
+
+        //webcam尺寸
+        var HEIGHT = 480;
+        var WIDTH = HEIGHT*4/3;
+
+        // webcam
+        var webcam, camCanvas, camTex;
+
+        // gl
+        var renderer, projector = new THREE.Projector();
+        var scene, camera;
+        var webcamScene, webcamCam;
+
+        // Jsar canvas
+        var canvas, ctx;
+
+        // global objects
+        var Jsar, Models, Datas;
+
+        var container;
+
+        var mouse = { x: 0, y: 0 }, HOVERED;
+
+        function createDOM() {
+            container = document.getElementById('container');
+
+            if(!Detector.webgl) AR.isIE = true;
+
+            // 设置 glCanvas的尺寸 为 全屏
+            GLCanvasHeight = window.innerHeight;
+            GLCanvasWidth = window.innerWidth;
+            if(GLCanvasWidth/GLCanvasHeight > 4/3) {
+                GLCanvasHeight = GLCanvasWidth*3/4;
+            } else {
+                GLCanvasWidth = GLCanvasHeight*4/3;
+            }
+            console.log("GLCanvasHeight="+GLCanvasHeight+", GLCanvasWidth="+GLCanvasWidth);
+
+            if(AR.isIE) {
+                // create preview image
+                webcam = document.createElement('img');
+                webcam.width = WIDTH;
+                webcam.height = HEIGHT;
+                AR.Webcam(webcam);
+                webcam.style.position = "absolute";
+                webcam.style.left = -100000+'px';
+                container.appendChild(webcam);
+            } else {
+                // create webcam
+                webcam = document.createElement('video');
+                webcam.style.display = 'none';
+                webcam.width = WIDTH;
+                webcam.height = HEIGHT;
+                webcam.videoWidth = WIDTH;
+                webcam.videoHeight = HEIGHT;
+                webcam.loop = true;
+                webcam.volume = 0;
+                webcam.autoplay = true;
+                AR.Webcam(webcam);
+            }
+
+            //create camCanvas
+            camCanvas = document.createElement('canvas');
+            camCanvas.width = webcam.width;
+            camCanvas.height = webcam.height;
+            camTex = new THREE.Texture(camCanvas);
+
+            camTex.minFilter = THREE.LinearFilter;
+            camTex.magFilter = THREE.LinearFilter;
+
+            //create main canvas （是 Jsar 跟 camCanvas 的 媒介，camCanvas画到canvas上，将像素传给Jsar）
+            canvas = document.createElement('canvas');
+            canvas.width = WIDTH;
+            canvas.height = HEIGHT;
+            ctx = canvas.getContext('2d');
+        }
+
+        function init() {
+            Jsar = new AR.Jsar(canvas, WIDTH, HEIGHT, threshold, 3);
+
+            // THREE.JS
+
+           if(Detector.webgl) renderer = new THREE.WebGLRenderer();
+           else
+                renderer = new THREE.CanvasRenderer();
+
+            renderer.setSize(GLCanvasWidth, GLCanvasHeight);
+
+            scene = new THREE.Scene();
+
+            // lights
+//            var light = new THREE.PointLight(0xffffff, 10);
+//            light.position.set(400, 500, 100);
+//            scene.add(light);
+//            light.position.set( -400, -500, -100);
+//            scene.add(light);
+
+            // LIGHTS
+            var directionalLight = new THREE.DirectionalLight( 0xffffff );
+            directionalLight.position.set( 1, 1, 0.5 ).normalize();
+            scene.add( directionalLight );
+
+            var pointLight = new THREE.PointLight( 0xffaa00 );
+            pointLight.position.set( 0, 0, 0 );
+            scene.add( pointLight );
+
+
+            camera = new THREE.PerspectiveCamera(80, WIDTH / HEIGHT, 1, 10000 );   // 80度
+
+            var ARMat = Jsar.getARMat();
+            camera.projectionMatrix.setFromArray(ARMat);
+
+            var plane = new THREE.Mesh(new THREE.PlaneGeometry(2, 2), new THREE.MeshBasicMaterial({
+                map: camTex,
+                overdraw: true       //seems no need when using WebGL ?
+            }));
+            plane.material.depthTest = false;
+            plane.material.depthWrite = false;
+            webcamCam = new THREE.Camera();
+            webcamScene = new THREE.Scene();
+            webcamScene.add(plane);
+
+            var glCanvas = renderer.domElement;
+            container.appendChild(glCanvas);    //  add Renderer-canvas to container
+        }
+        function render() {
+            // detecting...Loop
+            camCanvas.getContext('2d').drawImage(webcam, 0, 0);
+            camTex.needsUpdate = true;
+
+            ctx.drawImage(camCanvas, 0, 0, WIDTH, HEIGHT);
+            canvas.changed = true;
+
+            // 更新Models
+            Models.update();
+
+            var markers = Jsar.detect(scene);
+            // 增强虚拟obj
+            for (var i in markers) {
+                var m = markers[i];
+                if (!m.model) {     //分配 model
+                    m.model = new THREE.Object3D();     // Object3D > mesh(cube)
+                    var cubes = Models.getModel(i);
+                    if(cubes.length == 0) continue;
+
+                    for(var c in cubes) {
+                        var cube = cubes[c];
+
+                        cube.doubleSided = true;
+                        m.model.matrixAutoUpdate = false;
+
+                        m.model.add(cube);
+                    }
+                    scene.add(m.model); //add to scene
+                }
+                var ARMat = new Float32Array(16);
+                Jsar.copyMatrix(m.transform, ARMat);   // ARmat -> GLmat
+                m.model.matrix.setFromArray(ARMat);
+                m.model.matrixWorldNeedsUpdate = true;
+            }
+
+//            // deal with onhover
+//            for(var i in this._models){
+//                this._models[i].nohover(this._models[i]);
+//            }
+            var id = getIntersected();
+//            if(id>=0) {
+//                Models._models[id].onhover(Models._models[id]);
+//            }
+
+            // HOVERED
+            if ( id >= 0 ) {
+                if ( HOVERED != Models._models[id] ) {
+                    if ( HOVERED ) HOVERED.nohover(HOVERED);
+                    HOVERED = Models._models[id];
+                    HOVERED.onhover(HOVERED);
+                }
+            } else {
+                if ( HOVERED ) HOVERED.nohover(HOVERED);
+                HOVERED = null;
+            }
+
+            renderer.autoClear = false;
+            renderer.clear();
+
+            renderer.render(webcamScene, webcamCam);     // render了两个场景，先 webcam，然后 ar
+            renderer.render(scene, camera);
+        }
+        function animate() {
+            requestAnimationFrame( animate );
+            render();
+        }
+
+        // onload - 入口点
+        window.onload = function() {
+
+            //  !!Main
+            createDOM();
+
+            Models = new AR.Models(projector, camera);
+            Datas = new AR.Data(Models);
+            Datas.loadPage1();
+
+            init();
+
+            document.addEventListener( 'mousemove', onDocumentMouseMove, false );
+            document.addEventListener( 'mousedown', onDocumentMouseDown, false );
+            //window.addEventListener( 'resize', onWindowResize, false );
+
+//            setInterval(animate, 15);    // 1000/15=67 fps
+            animate();
+        };
+        // events
+        function getIntersected() {
+            var vector = new THREE.Vector3( mouse.x, mouse.y, 0.5 );
+            projector.unprojectVector( vector, camera );    //摄像头标定，分解投影矩阵
+            var raycaster = new THREE.Raycaster( camera.position, vector.sub( camera.position ).normalize(), 1, 10000 );
+            return Models.intersect(raycaster);
+        }
+        function onDocumentMouseMove( event ) {
+            event.preventDefault();
+            mouse.x = ( (event.clientX-container.offsetLeft) / (GLCanvasWidth) ) * 2 - 1;
+            mouse.y = - ( (event.clientY-container.offsetTop) / (GLCanvasHeight) ) * 2 + 1;
+        }
+        function onDocumentMouseDown( event ) {
+            event.preventDefault();
+
+            var id = getIntersected();   // javascript   的引用？
+            if(id>=0) {
+                Models._models[id].clickCount++;
+                Models._models[id].onclick(Models._models[id]);
+            }
+        }
+
+        // others
+        var cutCount=0;
+        function cutCamMethod(){
+            if(cutCount==0){
+                webcam.pause();
+                cutCount=1;
+            }else{
+                webcam.play();
+                cutCount=0;
+            }
+        }
+        // Jq
+        $(document).ready(
+                function()
+                {
+                    $('#dock').Fisheye(
+                            {
+                                maxWidth: 50,
+                                items: 'a',
+                                itemsText: 'span',
+                                container: '.dock-container',
+                                itemWidth: 40,
+                                proximity: 90,
+                                halign : 'center'
+                            }
+                    )
+                }
+        );
+    </script>
+</head>
+<body>
+    <noscript>
+        <div style="display:block">
+            Your browser does not support JavaScript!
         </div>
-    </body>
+    </noscript>
+    <div id="loading">
+        loading...
+    </div>
+    <div id="container" >
+        <div class="dock" id="dock">
+            <div class="dock-container">
+                <a class="dock-item" href="#"><img src="Images/home.png" alt="home" /><span>Home</span></a>
+                <a class="dock-item" href="#"><img src="Images/email.png" alt="contact" /><span>Contact</span></a>
+                <a class="dock-item" href="#"><img src="Images/portfolio.png" alt="portfolio" /><span>Portfolio</span></a>
+                <a class="dock-item" href="#"><img src="Images/music.png" alt="music" /><span>Music</span></a>
+                <a class="dock-item" href="#"><img src="Images/video.png" alt="video" /><span>Video</span></a>
+                <a class="dock-item" href="#"><img src="Images/history.png" alt="history" /><span>History</span></a>
+                <a class="dock-item" href="#"><img src="Images/calendar.png" alt="calendar" /><span>Calendar</span></a>
+                <a class="dock-item" href="#"><img src="Images/rss.png" alt="rss" /><span>rss</span></a>
+
+                <a class="dock-item" href="#" onClick="Datas.loadPage1()"><img src="Uploads/PaperCover/imagineCup.jpg" alt="rss" /><span>Page #1</span></a>
+                <a class="dock-item" href="#" onClick="Datas.loadPage2()"><img src="Uploads/PaperCover/wow1.jpg" alt="rss" /><span>Page #2</span></a>
+                <a class="dock-item" href="#" onClick="Datas.loadPage3()"><img src="Uploads/PaperCover/click.jpg" alt="rss" /><span>Page #3</span></a>
+                <a class="dock-item" href="monsterCtr.html"><img src="Uploads/PaperCover/monster1.jpg" alt="home" /><span>Pages #4</span></a>
+
+                <a class="dock-item" href="#" onClick="cutCamMethod()"><img src="Images/cutCam.png" alt="rss" /><span>Clip</span></a>
+            </div>
+        </div>
+    </div>
+</body>
 </html>
