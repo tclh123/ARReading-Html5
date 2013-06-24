@@ -71,6 +71,9 @@
 
         var mouse = { x: 0, y: 0 }, HOVERED;
 
+        // 为了判断当前识别出来的marker
+        var markers;
+
         function createDOM() {
             container = document.getElementById('container');
 
@@ -184,9 +187,14 @@
             // 更新Models
             Models.update();
 
-            var markers = Jsar.detect(scene);
+//            var markers = Jsar.detect(scene);   // markers 不是数组，是对象
+            markers = Jsar.detect(scene);   // markers 不是数组，是对象
             // 增强虚拟obj
-            for (var i in markers) {
+            for (var i in markers) { // i 是 markerId
+
+                // 加载相应page
+                Datas.loadPage(i);
+
                 var m = markers[i];
                 if (!m.model) {     //分配 model
                     m.model = new THREE.Object3D();     // Object3D > mesh(cube)
@@ -249,7 +257,6 @@
 
             Models = new AR.Models(projector, camera);
             Datas = new AR.Data(Models);
-            Datas.loadPage1();
 
             init();
 
@@ -277,8 +284,17 @@
 
             var id = getIntersected();   // javascript   的引用？
             if(id>=0) {
-                Models._models[id].clickCount++;
-                Models._models[id].onclick(Models._models[id]);
+                var find = false;
+                for(var markerId in markers) {
+                    if(markerId == Models._models[id].idMarker) {
+                        find = true;
+                        break;
+                    }
+                }
+                if(find) {  // 有识别到marker，再触发点击事件
+                    Models._models[id].clickCount++;
+                    Models._models[id].onclick(Models._models[id]);
+                }
             }
         }
 

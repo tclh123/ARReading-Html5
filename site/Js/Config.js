@@ -13,3 +13,11 @@ var MARKER_SIZE = 120;
 //webcam尺寸
 var HEIGHT = 480;
 var WIDTH = HEIGHT*4/3;
+
+function propertyCount(obj) {
+    var count = 0;
+    for (var i in obj) {
+        count ++;
+    }
+    return count;
+}

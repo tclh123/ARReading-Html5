@@ -8,6 +8,9 @@
 
 AR.Data = function(Models) {
 
+    var cache = {};
+    var cacheMax = 5;
+
     // 数据
     var pages = [
 
@@ -58,7 +61,7 @@ AR.Data = function(Models) {
                         isAutoplay: false,
                         imageTexSrc: 'Uploads/Image/blank.png'
                     },
-                    clickEventCallback: function(e){
+                    clickEventCallback: function(e){            // TODO: 要上线的话，这里要提供固定的几种clickEventCallback。
                         if(e.clickCount%2){
                             e.domElement.play();
                             e.obj.material.map =  THREE.ImageUtils.loadTexture('Uploads/Image/continue.png');
@@ -157,6 +160,52 @@ AR.Data = function(Models) {
             }
         }
         return null;
+    };
+
+    // 通用接口
+    this.loadPage = function(markerId) {
+
+        // 没命中
+        if(!cache[markerId]) {
+
+            // 根据 markerId 获取 page，加载 models
+            var page = this.getPage(markerId);
+            if(page && page.models) {
+
+                // TODO: cache strateges，现在是全清空
+                // TODO
+                // 点击事件没法处理干净...先都清空吧...
+//                if(propertyCount(cache) > cacheMax) {
+
+                if(propertyCount(cache) > 0) {
+                    Models.clearModels();
+
+                    for(var i in cache) {
+                        delete cache[i];
+                    }
+                }
+
+                cache[markerId] = {};
+                cache[markerId].used = 0;
+
+                for(var i in page.models) {
+                    var modelData = page.models[i];
+
+                    var model = Models.createModel(modelData.modelType, modelData.modelWidth, modelData.modelHeight, modelData.attach);
+
+                    var scale = MARKER_SIZE/modelData.markerSize;
+                    var offsetX = ((modelData.markerLeftTopX+modelData.markerSize/2)-(modelData.modelLeftTopX+modelData.modelWidth/2))*scale;
+                    var offsetY = ((modelData.markerLeftTopY+modelData.markerSize/2)-(modelData.modelLeftTopY+modelData.modelHeight/2))*scale;
+
+                    model.obj.position.x = -offsetX;
+                    model.obj.position.y = offsetY;
+
+                    Models.addModel(page.markerId, model, modelData.clickEventCallback);
+                }
+            }
+        } else {
+            cache[markerId].used++;
+        }
     };
 
     // imagine cup 视频

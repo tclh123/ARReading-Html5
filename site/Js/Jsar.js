@@ -53,15 +53,17 @@ AR.Jsar = function(canvas, width, height, markerSize, threshold, slowness){
         // tracking. age-algorithm
         for (var i in markers) {
             var r = markers[i];
-            //if (r.age > 1) {
+//            if (r.age > 1) {
+
+//            console.log('id='+i+', age='+ r.age);
             if (r.age > this.slowness) {   //越大越缓和
                 delete markers[i];
-                scene.remove(r.model);
+                scene.remove(r.model);  // idMarker.model 是 render时加的属性
             }
             r.age++;
         }
         return markers;
-    }
+    };
 
     // 16 array -> 4x4 mat
     THREE.Matrix4.prototype.setFromArray = function(m) {

@@ -132,6 +132,8 @@ AR.Models = function(projector, camera){
         model['nohover'] = nohover || function(){};
         model['clickCount'] = 0;
 
+        model.obj.idx = this._models.length;    // 维护下标
+
         this._models.push(model);
         this._objects.push(model.obj);
     };
@@ -140,7 +142,8 @@ AR.Models = function(projector, camera){
     this.getModel = function(idMarker){
         var ret = [];
         for(var i in this._models){
-            if(this._models[i].idMarker == idMarker){
+            if(this._models[i].idMarker == idMarker){   // MarkerId
+
                 //console.log('find'+this._models[i].idMarker);
                  ret.push(this._models[i].obj);
             }
@@ -150,18 +153,16 @@ AR.Models = function(projector, camera){
 
     //相交物体
     this.intersect = function(ray){
-        var intersects = ray.intersectObjects( this._objects );
+        var intersects = ray.intersectObjects( this._objects );   // 不能用 scene.children，因为每个page其实只有一个Object3D（里面又有小obj）
+
         if ( intersects.length > 0 ) {
-            //for ( var i = 0, l = this._objects.length; i < l; i ++ ) {
             for(var i in this._objects){
                 if(intersects[ 0 ].object == this._objects[i]){
                     var id = i;
                     break;
                 }
             }
-//            this._models[id].clickCount++;
-//            this._models[id].onclick(this._models[id]);
-//            return intersects[ 0 ].point;
+
             return id;
         }
         return -1;
