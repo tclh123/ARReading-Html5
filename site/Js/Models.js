@@ -88,6 +88,7 @@ AR.Models = function(projector, camera){
                 transparent: true,
                 side: THREE.DoubleSide
             }));
+
         } else if(modelType == AR.Models.ModelType.obj3d) {
             var loader = attach.loader;
             loader.load( attach.url,

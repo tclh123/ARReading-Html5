@@ -8,6 +8,26 @@
 
 AR.Data = function(Models) {
 
+
+    var pages = [
+
+        // page
+        {
+            markerId: 0,
+            models: [
+                {
+                    type: AR.Models.ModelType.video,
+                    width: 400 *672/378,
+                    height: 400,
+
+
+
+                }
+            ]
+        }
+
+    ];
+
     // imagine cup 视频
     this.loadPage1 = function() {
         Models.clearModels();
@@ -91,49 +111,51 @@ AR.Data = function(Models) {
             }
         });
 
-        var model3d_second = Models.createModel(AR.Models.ModelType.obj3d, 0, 0, {
-            loader: new THREE.BinaryLoader(),
-            url:'Uploads/3DModel/gallardo/GallardoNoUv_bin.js',
-            material: new THREE.MeshFaceMaterial([
-                AR.Data.mlib[ "Pure chrome" ], 	// wheels chrome
-                AR.Data.mlib[ "Black rough" ],   // tire
-                AR.Data.mlib[ "Black glass" ], 	// windshield
-                AR.Data.mlib[ "Green metal" ], 		// body
-                AR.Data.mlib[ "Red glass" ],    	// back lights
-                AR.Data.mlib[ "Yellow glass" ],  // front lights
-                AR.Data.mlib[ "Dark chrome" ]	// windshield rim
-            ]),
-            scale: 0.5,
-            rotation: [-Math.PI/2,0, 0],
-            callback: function(model) {
-                model.obj.position.x = -240;
-                //model.obj.position.y = 356-100;
-                Models.addModel(0, model);
-            }
-        });
+//        var model3d_second = Models.createModel(AR.Models.ModelType.obj3d, 0, 0, {
+//            loader: new THREE.BinaryLoader(),
+//            url:'Uploads/3DModel/gallardo/GallardoNoUv_bin.js',
+//            material: new THREE.MeshFaceMaterial([
+//                AR.Data.mlib[ "Pure chrome" ], 	// wheels chrome
+//                AR.Data.mlib[ "Black rough" ],   // tire
+//                AR.Data.mlib[ "Black glass" ], 	// windshield
+//                AR.Data.mlib[ "Green metal" ], 		// body
+//                AR.Data.mlib[ "Red glass" ],    	// back lights
+//                AR.Data.mlib[ "Yellow glass" ],  // front lights
+//                AR.Data.mlib[ "Dark chrome" ]	// windshield rim
+//            ]),
+//            scale: 0.5,
+//            rotation: [-Math.PI/2,0, 0],
+//            callback: function(model) {
+//                model.obj.position.x = -240;
+//                //model.obj.position.y = 356-100;
+//                Models.addModel(0, model);
+//            }
+//        });
+//
+//        var model3d_third = Models.createModel(AR.Models.ModelType.obj3d, 0, 0, {
+//            loader: new THREE.BinaryLoader(),
+//            url:'Uploads/3DModel/camaro/CamaroNoUv_bin.js',
+//            material: new THREE.MeshFaceMaterial([
+//                AR.Data.mlib[ "Orange" ], 			// car body
+//                AR.Data.mlib[ "Pure chrome" ], 		// wheels chrome
+//                AR.Data.mlib[ "Pure chrome" ], 		// grille chrome
+//                AR.Data.mlib[ "Dark chrome" ], 		// door lines
+//                AR.Data.mlib[ "Light glass" ], 		// windshield
+//                AR.Data.mlib[ "Gray shiny" ],        // interior
+//                AR.Data.mlib[ "Black rough" ],       // tire
+//                AR.Data.mlib[ "Fullblack rough" ],   // tireling
+//                AR.Data.mlib[ "Fullblack rough" ]    // behind grille
+//            ]),
+//            scale: 0.5,
+//            rotation: [-Math.PI/2,0, 0],
+//            callback: function(model) {
+//                model.obj.position.x = -240+100;
+//                //model.obj.position.y = 356;
+//                Models.addModel(0, model);
+//            }
+//        });
 
-        var model3d_third = Models.createModel(AR.Models.ModelType.obj3d, 0, 0, {
-            loader: new THREE.BinaryLoader(),
-            url:'Uploads/3DModel/camaro/CamaroNoUv_bin.js',
-            material: new THREE.MeshFaceMaterial([
-                AR.Data.mlib[ "Orange" ], 			// car body
-                AR.Data.mlib[ "Pure chrome" ], 		// wheels chrome
-                AR.Data.mlib[ "Pure chrome" ], 		// grille chrome
-                AR.Data.mlib[ "Dark chrome" ], 		// door lines
-                AR.Data.mlib[ "Light glass" ], 		// windshield
-                AR.Data.mlib[ "Gray shiny" ],        // interior
-                AR.Data.mlib[ "Black rough" ],       // tire
-                AR.Data.mlib[ "Fullblack rough" ],   // tireling
-                AR.Data.mlib[ "Fullblack rough" ]    // behind grille
-            ]),
-            scale: 0.5,
-            rotation: [-Math.PI/2,0, 0],
-            callback: function(model) {
-                model.obj.position.x = -240+100;
-                //model.obj.position.y = 356;
-                Models.addModel(0, model);
-            }
-        });
+
     };
 
     // 点读机
@@ -286,4 +308,4 @@ AR.Data.mlib = {
     "Darkgray shiny":	new THREE.MeshPhongMaterial( { color: 0x000000, specular: 0x050505 } ),
     "Gray shiny":		new THREE.MeshPhongMaterial( { color: 0x050505, shininess: 20 } )
 
-}
+};
