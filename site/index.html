@@ -37,15 +37,21 @@
     <script type="text/javascript" src="Js/UI/dock.js"></script>
 
     <script>
-        //DEBUG = true;     // global var for JSAR
-        var threshold = 90;
+        //////////////////////////////////// Configs
 
+        //DEBUG = true;     // global var for JSAR
+        var THRESHOLD = 90;
+        var MARKER_SIZE = 120;
+
+        // 根据 window 大小
         var GLCanvasHeight;
         var GLCanvasWidth;
 
         //webcam尺寸
         var HEIGHT = 480;
         var WIDTH = HEIGHT*4/3;
+
+        //////////////////////////////////// VARS
 
         // webcam
         var webcam, camCanvas, camTex;
@@ -120,7 +126,7 @@
         }
 
         function init() {
-            Jsar = new AR.Jsar(canvas, WIDTH, HEIGHT, threshold, 3);
+            Jsar = new AR.Jsar(canvas, WIDTH, HEIGHT, MARKER_SIZE, THRESHOLD, 3);
 
             // THREE.JS
 
