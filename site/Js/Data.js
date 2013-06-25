@@ -152,38 +152,85 @@ AR.Data = function(Models) {
             ]
         },
 
-        // page
+        // TODO: 改成 monsterCtr
+        // // page
+        // {
+        //     markerId: 2,
+        //     models: [
+        //         {           // TODO ， obj3d 类型 的 Model。 待数据化
+        //             modelType: AR.Models.ModelType.obj3d,
+
+        //             modelMidX: 252,
+        //             modelMidY: 331,
+        //             markerLeftTopX: 363,
+        //             markerLeftTopY: 548,
+        //             markerSize: 80,
+
+        //             attach: {
+        //                 loader: new THREE.BinaryLoader(),
+        //                 url: 'Uploads/3DModel/veyron/VeyronNoUv_bin.js',
+        //                 material: new THREE.MeshFaceMaterial([
+        //                     AR.Data.mlib[ "Black rough" ],		// tires + inside
+        //                     AR.Data.mlib[ "Pure chrome" ],		// wheels + extras chrome
+        //                     AR.Data.mlib[ "Orange metal" ], 			// back / top / front torso
+        //                     AR.Data.mlib[ "Dark glass" ],		// glass
+        //                     AR.Data.mlib[ "Pure chrome" ],		// sides torso
+        //                     AR.Data.mlib[ "Pure chrome" ],		// engine
+        //                     AR.Data.mlib[ "Red glass 50" ],		// backlights
+        //                     AR.Data.mlib[ "Orange glass 50" ]	// backsignals
+        //                 ]),
+        //                 scale: 2,
+        //                 rotation: [0, Math.PI/2, 0],
+        //                 callback: function(model) {    // TODO: 这个callback，应该放在处理数据的地方
+        //                     model.obj.position.x = -240;
+        //                     model.obj.position.y = 356+100;
+        //                     Models.addModel(2, model);
+        //                 }
+        //             }
+        //         }
+        //     ]
+        // },
+
+        // page         // 新加的，待测试！
         {
-            markerId: 2,
+            markerId: 3,
             models: [
                 {           // TODO ， obj3d 类型 的 Model。 待数据化
                     modelType: AR.Models.ModelType.obj3d,
 
-                    modelMidX: 252,
-                    modelMidY: 331,
-                    markerLeftTopX: 363,
-                    markerLeftTopY: 548,
-                    markerSize: 80,
+                    modelMidX: 597/2,
+                    modelMidY: 704/2,
+                    markerLeftTopX: 59+50,
+                    markerLeftTopY: 67+50,
+                    markerSize: 100,
 
                     attach: {
                         loader: new THREE.BinaryLoader(),
                         url: 'Uploads/3DModel/veyron/VeyronNoUv_bin.js',
                         material: new THREE.MeshFaceMaterial([
-                            AR.Data.mlib[ "Black rough" ],		// tires + inside
-                            AR.Data.mlib[ "Pure chrome" ],		// wheels + extras chrome
-                            AR.Data.mlib[ "Orange metal" ], 			// back / top / front torso
-                            AR.Data.mlib[ "Dark glass" ],		// glass
-                            AR.Data.mlib[ "Pure chrome" ],		// sides torso
-                            AR.Data.mlib[ "Pure chrome" ],		// engine
-                            AR.Data.mlib[ "Red glass 50" ],		// backlights
-                            AR.Data.mlib[ "Orange glass 50" ]	// backsignals
+                            AR.Data.mlib[ "Black rough" ],      // tires + inside
+                            AR.Data.mlib[ "Pure chrome" ],      // wheels + extras chrome
+                            AR.Data.mlib[ "Orange metal" ],             // back / top / front torso
+                            AR.Data.mlib[ "Dark glass" ],       // glass
+                            AR.Data.mlib[ "Pure chrome" ],      // sides torso
+                            AR.Data.mlib[ "Pure chrome" ],      // engine
+                            AR.Data.mlib[ "Red glass 50" ],     // backlights
+                            AR.Data.mlib[ "Orange glass 50" ]   // backsignals
                         ]),
                         scale: 2,
                         rotation: [0, Math.PI/2, 0],
                         callback: function(model) {    // TODO: 这个callback，应该放在处理数据的地方
-                            model.obj.position.x = -240;
-                            model.obj.position.y = 356+100;
-                            Models.addModel(2, model);
+
+                            var scale = MARKER_SIZE/100;
+                            var offsetX = ((109+100/2)-(597/2))*scale;
+                            var offsetY = ((117+100/2)-(704/2))*scale;
+
+                            model.obj.position.x = -offsetX;
+                            model.obj.position.y = offsetY;
+
+                            // model.obj.position.x = -240;
+                            // model.obj.position.y = 356+100;
+                            Models.addModel(3, model);
                         }
                     }
                 }
